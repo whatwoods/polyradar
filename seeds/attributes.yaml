@@ -1,0 +1,18 @@
+# Attribute registry v1 (PLAN §8.2). Facts may only use these keys.
+- { key: license_spdx, type: string, deterministic: true, description: SPDX id from repo/package metadata }
+- { key: license_custom_terms, type: string, deterministic: false, description: Non-OSI terms in plain words }
+- { key: license_declared, type: boolean, deterministic: true, description: Whether any license is declared at all }
+- { key: source_available, type: boolean, deterministic: true, description: Source code is publicly readable }
+- { key: has_docs, type: boolean, deterministic: false, description: Official documentation exists }
+- { key: docs_url, type: url, deterministic: false, description: Official documentation URL }
+- { key: latest_version, type: string, deterministic: true, description: Latest published version }
+- { key: renderer_observed, type: enum, allowed: [webgl2, webgpu, webgl1, canvas2d], deterministic: true, description: Renderer seen at runtime }
+- { key: engine_version_observed, type: string, deterministic: true, description: e.g. THREE.REVISION at runtime }
+- { key: initial_load_bytes, type: bytes, deterministic: true, description: Bytes transferred until first frame }
+- { key: runtime_requirements, type: "string[]", allowed: [webgl2, webgpu, webxr, gpu-server, api-only], deterministic: false, description: What it needs to run }
+- { key: input_modalities, type: "string[]", deterministic: false, description: text, image, video, mesh }
+- { key: output_formats, type: "string[]", deterministic: false, description: glb, gltf, fbx, obj, ply, splat, ktx2, png }
+- { key: pricing_model, type: enum, allowed: [free, freemium, paid, usage, custom], deterministic: false, description: How it is paid for }
+- { key: external_assets, type: boolean, deterministic: false, description: Downloads models/textures at runtime }
+- { key: web_readiness, type: enum, allowed: [native-web, exports-web-format, server-only, none], deterministic: false, description: How directly it reaches a web page }
+- { key: stars, type: number, deterministic: true, description: GitHub stars }

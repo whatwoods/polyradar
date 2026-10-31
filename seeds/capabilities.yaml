@@ -1,0 +1,52 @@
+# Capability tree v1 — main navigation (PLAN §3.2). Slug path encodes the parent.
+- { slug: render, en: Rendering, zh: 渲染 }
+- { slug: render/webgpu, en: WebGPU, zh: WebGPU }
+- { slug: render/webgl, en: WebGL, zh: WebGL }
+- { slug: render/shading-language, en: Shading languages, zh: 着色语言 }
+- { slug: render/shading-language/tsl, en: TSL, zh: TSL }
+- { slug: render/shading-language/wgsl, en: WGSL, zh: WGSL }
+- { slug: render/gaussian-splatting, en: Gaussian splatting, zh: 高斯泼溅 }
+- { slug: render/gaussian-splatting/dynamic, en: Dynamic splats, zh: 动态高斯 }
+- { slug: render/particles, en: Particles, zh: 粒子 }
+- { slug: render/particles/gpu-compute, en: GPU compute particles, zh: GPU 计算粒子 }
+- { slug: render/transparency, en: Transparency, zh: 透明 }
+- { slug: render/transparency/oit, en: Order-independent transparency, zh: 顺序无关透明 }
+- { slug: render/terrain, en: Terrain rendering, zh: 地形渲染 }
+- { slug: render/terrain/lod, en: Terrain LOD, zh: 地形 LOD }
+- { slug: render/lighting, en: Lighting, zh: 光照 }
+- { slug: render/postprocessing, en: Post-processing, zh: 后处理 }
+
+- { slug: procgen, en: Procedural generation, zh: 程序化生成 }
+- { slug: procgen/terrain, en: Terrain, zh: 地形 }
+- { slug: procgen/terrain/erosion, en: Erosion, zh: 侵蚀 }
+- { slug: procgen/city, en: Cities, zh: 城市 }
+- { slug: procgen/wfc, en: Wave function collapse, zh: 波函数坍缩 }
+- { slug: procgen/level, en: Levels, zh: 关卡 }
+
+- { slug: asset, en: AI assets, zh: AI 资产 }
+- { slug: asset/3d, en: 3D, zh: 3D }
+- { slug: asset/3d/image-to-3d, en: Image to 3D, zh: 图生 3D }
+- { slug: asset/3d/text-to-3d, en: Text to 3D, zh: 文生 3D }
+- { slug: asset/3d/retopology, en: Retopology, zh: 重拓扑 }
+- { slug: asset/3d/rigging, en: Rigging, zh: 绑骨 }
+- { slug: asset/3d/animation, en: Animation, zh: 动画 }
+- { slug: asset/texture, en: Textures, zh: 纹理 }
+- { slug: asset/texture/pbr, en: PBR textures, zh: PBR 纹理 }
+- { slug: asset/2d, en: 2D, zh: 2D }
+- { slug: asset/2d/sprite, en: Sprites, zh: 精灵图 }
+- { slug: asset/2d/tileset, en: Tilesets, zh: 瓦片集 }
+- { slug: asset/audio, en: Audio, zh: 音频 }
+- { slug: asset/audio/sfx, en: Sound effects, zh: 音效 }
+
+- { slug: gamecreation, en: Game creation, zh: 游戏创作 }
+- { slug: gamecreation/agent, en: Agents, zh: Agent }
+- { slug: gamecreation/mcp, en: MCP servers, zh: MCP }
+- { slug: gamecreation/world-model, en: World models, zh: 世界模型 }
+- { slug: gamecreation/shipped-web-game, en: Shipped web games, zh: 已上线 Web 游戏 }
+
+- { slug: interaction, en: Interaction, zh: 交互 }
+- { slug: interaction/webxr, en: WebXR, zh: WebXR }
+- { slug: interaction/llm-npc, en: LLM NPCs, zh: LLM NPC }
+
+- { slug: benchmark, en: Benchmarks, zh: 基准测试 }
+- { slug: benchmark/gpu-browser, en: Browser GPU, zh: 浏览器 GPU }

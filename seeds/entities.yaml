@@ -1,0 +1,237 @@
+# Hand-curated seed entities: core libraries plus the 2026-10-24..30 acceptance
+# fixtures (PLAN §12). Facts here are method=human with the source post as evidence.
+# Anything the author did not state is left out, never guessed.
+
+entities:
+  - slug: three
+    type: library
+    name: three.js
+    aliases: [three, threejs]
+    status: active
+    evidence_level: E2
+    importance: 1
+    summary_zh: 最主流的 Web 3D 库，WebGLRenderer 与 WebGPURenderer 双后端，TSL 着色语言。
+    summary_en: The most widely used web 3D library, with WebGL and WebGPU renderers and the TSL shading language.
+    keys: { npm: three, github: mrdoob/three.js, url: https://threejs.org }
+    capabilities: [render/webgpu, render/webgl, render/shading-language/tsl]
+    facts:
+      - { attr: license_spdx, value: MIT, method: deterministic, from: 2010-04-24, evidence: { url: https://github.com/mrdoob/three.js/blob/dev/LICENSE } }
+
+  - slug: types-three
+    type: library
+    name: "@types/three"
+    aliases: [types/three]
+    status: active
+    evidence_level: E2
+    importance: 0.6
+    summary_zh: three.js 的 TypeScript 类型定义，API diff 的数据来源。
+    summary_en: TypeScript definitions for three.js; the input for our API diff.
+    keys: { npm: "@types/three", github: three-types/three-ts-types }
+    capabilities: [render/webgpu]
+    facts:
+      - { attr: license_spdx, value: MIT, method: deterministic, from: 2021-01-01, evidence: { url: https://www.npmjs.com/package/@types/three } }
+
+  - slug: react-three-fiber
+    type: library
+    name: React Three Fiber
+    aliases: ["@react-three/fiber", r3f]
+    status: active
+    evidence_level: E2
+    importance: 0.8
+    summary_zh: three.js 的 React 渲染器。
+    summary_en: React renderer for three.js.
+    keys: { npm: "@react-three/fiber", github: pmndrs/react-three-fiber }
+    capabilities: [render/webgl, render/webgpu]
+
+  - slug: drei
+    type: library
+    name: drei
+    aliases: ["@react-three/drei"]
+    status: active
+    evidence_level: E2
+    importance: 0.7
+    summary_zh: React Three Fiber 的常用组件与辅助工具集。
+    summary_en: Helpers and abstractions for React Three Fiber.
+    keys: { npm: "@react-three/drei", github: pmndrs/drei }
+    capabilities: [render/webgl]
+
+  - slug: meep
+    type: engine
+    name: Meep
+    aliases: [meep-engine, "@woosh/meep-engine"]
+    status: active
+    evidence_level: E1
+    importance: 0.8
+    summary_zh: 基于 three.js 的商业 Web 游戏引擎。粒子系统跑在 GPU compute 上，所有发射器共用一次调度。
+    summary_en: A commercial web game engine on top of three.js; particles run in a single GPU compute dispatch.
+    keys: { npm: "@woosh/meep-engine", url: https://meep.dev }
+    capabilities: [render/particles/gpu-compute, render/transparency/oit, render/webgpu]
+    facts:
+      - { attr: license_custom_terms, value: "年利润低于 5 万美元免费", method: human, from: 2026-10-27, evidence: { url: https://discourse.threejs.org/t/gpu-driven-particle-system/94233 } }
+      - { attr: source_available, value: false, method: human, from: 2026-10-27, evidence: { url: https://discourse.threejs.org/t/gpu-driven-particle-system/94233, quote: 代码在 npm 包内，无公开 Git 仓库 } }
+      - { attr: has_docs, value: false, method: human, from: 2026-10-27, evidence: { url: https://discourse.threejs.org/t/gpu-driven-particle-system/94233 } }
+      - { attr: has_docs, value: true, method: human, from: 2026-10-30, evidence: { url: https://meep.dev } }
+      - { attr: runtime_requirements, value: [webgpu], method: human, from: 2026-10-27, evidence: { url: https://discourse.threejs.org/t/gpu-driven-particle-system/94233 } }
+
+  - slug: meep-bonfire
+    type: demo
+    name: Meep Bonfire
+    status: active
+    evidence_level: E1
+    importance: 0.7
+    summary_zh: 四个 ECS 粒子特效组成的篝火，粒子采样 GPU 流体风场并被火光照亮。
+    summary_en: A bonfire built from four ECS particle effects that sample a GPU fluid wind field.
+    keys: { url: https://discourse.threejs.org/t/gpu-driven-particle-system/94233 }
+    capabilities: [render/particles/gpu-compute]
+    media: [{ kind: image, file: bonfire.png, origin: third_party, attribution: Alex Goldring, width: 464, height: 280 }]
+    author: Alex Goldring
+
+  - slug: nine-loops-subway
+    type: game
+    name: "NINE LOOPS: SUBWAY"
+    status: active
+    evidence_level: E1
+    importance: 0.6
+    summary_zh: 「8 号出口」式异常循环游戏，纯 three.js，手机可玩，中日英三语，在线排行榜。
+    summary_en: An Exit-8-style anomaly loop game in plain three.js; mobile, EN/JA, online leaderboard.
+    keys: { url: https://design9.jp/ninecity/loops/ }
+    capabilities: [gamecreation/shipped-web-game]
+    demos: [{ url: https://design9.jp/ninecity/loops/, requires: [webgl2] }]
+    media: [{ kind: image, file: nineloops.png, origin: official, attribution: DESIGN OFFICE NINE, width: 748, height: 394 }]
+    author: DESIGN OFFICE NINE
+    facts:
+      - { attr: initial_load_bytes, value: "17-20 MB", method: human, from: 2026-10-26, evidence: { url: https://discourse.threejs.org/t/nine-loops-subway-an-exit-8-style-anomaly-loop-game-in-three-js-mobile-en-ja-online-leaderboard/95932, quote: 首屏约 17–20 MB（作者自述） } }
+
+  - slug: open-gpu-benchmarker
+    type: demo
+    name: Open GPU Benchmarker
+    status: active
+    evidence_level: E1
+    importance: 0.4
+    summary_zh: 按种子生成的雨夜城市，沿 96 秒固定航线飞行，不下载任何模型或贴图，结束时给出帧率与瓶颈判断。
+    summary_en: A seeded procedural rainy city flown along a fixed 96-second path; no downloaded assets.
+    keys: { url: https://opengpubenchmarker.com }
+    capabilities: [procgen/city, benchmark/gpu-browser]
+    demos: [{ url: https://opengpubenchmarker.com, requires: [webgl2] }]
+    media: [{ kind: image, file: bench.png, origin: third_party, attribution: MattyStacks, width: 718, height: 266 }]
+    author: MattyStacks
+    facts:
+      - { attr: renderer_observed, value: webgl2, method: human, from: 2026-10-26, evidence: { url: https://discourse.threejs.org/t/open-gpu-benchmarker-a-browser-gpu-benchmark-where-the-entire-city-is-generated-in-code/95919 } }
+      - { attr: external_assets, value: false, method: human, from: 2026-10-26, evidence: { url: https://discourse.threejs.org/t/open-gpu-benchmarker-a-browser-gpu-benchmark-where-the-entire-city-is-generated-in-code/95919 } }
+      - { attr: license_declared, value: false, method: human, from: 2026-10-26, evidence: { url: https://discourse.threejs.org/t/open-gpu-benchmarker-a-browser-gpu-benchmark-where-the-entire-city-is-generated-in-code/95919 } }
+
+  - slug: eroded-landscape
+    type: demo
+    name: Eroded Landscape
+    status: active
+    evidence_level: E1
+    importance: 0.4
+    summary_zh: WebGPU 着色器生成的程序化山地，分块多分辨率保帧率，参数可调。
+    summary_en: Procedural eroded mountains generated in WebGPU shaders, with chunked multi-resolution LOD.
+    keys: { url: https://lo-th.github.io/landscape/, github: lo-th/landscape }
+    capabilities: [procgen/terrain/erosion, render/terrain/lod, render/webgpu]
+    demos: [{ url: https://lo-th.github.io/landscape/, requires: [webgpu] }]
+    media: [{ kind: image, file: landscape.png, origin: third_party, attribution: lo-th, width: 800, height: 368 }]
+    author: lo-th
+    facts:
+      - { attr: renderer_observed, value: webgpu, method: human, from: 2026-10-24, evidence: { url: https://discourse.threejs.org/t/eroded-landscape-prototype/95834 } }
+      - { attr: latest_version, value: 0.0.2, method: human, from: 2026-10-24, evidence: { url: https://discourse.threejs.org/t/eroded-landscape-prototype/95834 } }
+      - { attr: latest_version, value: 0.0.5, method: human, from: 2026-10-30, evidence: { url: https://lo-th.github.io/landscape/ } }
+
+  - slug: gaussianspline
+    type: paper
+    name: GaussianSpline
+    status: watch
+    evidence_level: E0
+    importance: 0.05
+    summary_zh: 用样条约束动态高斯泼溅的运动。无代码、无 Web 播放器，仅入索引。
+    summary_en: Spline-constrained motion for dynamic Gaussian splats. No code or web player yet.
+    capabilities: [render/gaussian-splatting/dynamic]
+    facts:
+      - { attr: web_readiness, value: none, method: human, from: 2026-10-27, evidence: { url: https://arxiv.org/list/cs.CV/new } }
+
+  - slug: tripo
+    type: service
+    name: Tripo
+    aliases: [tripo3d, tripo ai]
+    status: active
+    evidence_level: E1
+    importance: 0.6
+    summary_zh: 图/文生成 3D 模型的商业服务。
+    summary_en: Commercial image/text-to-3D service.
+    keys: { url: https://www.tripo3d.ai }
+    capabilities: [asset/3d/image-to-3d, asset/3d/text-to-3d]
+
+  - slug: mixamo
+    type: service
+    name: Mixamo
+    status: active
+    evidence_level: E1
+    importance: 0.5
+    summary_zh: Adobe 的自动绑骨与动作库。
+    summary_en: Adobe's auto-rigging service and animation library.
+    keys: { url: https://www.mixamo.com }
+    capabilities: [asset/3d/rigging, asset/3d/animation]
+
+  - slug: three-quarks
+    type: library
+    name: three.quarks
+    aliases: [quarks]
+    status: active
+    evidence_level: E1
+    importance: 0.4
+    summary_zh: three.js 的 CPU 粒子与 VFX 系统，带可视化编辑器。
+    summary_en: Particle and VFX system for three.js with a visual editor.
+    keys: { npm: three.quarks, github: Alchemist0823/three.quarks }
+    capabilities: [render/particles]
+
+relations:
+  - { src: meep, dst: three, type: depends_on }
+  - { src: meep-bonfire, dst: meep, type: built_with, evidence: https://discourse.threejs.org/t/gpu-driven-particle-system/94233 }
+  - { src: meep, dst: three-quarks, type: alternative_to }
+  - { src: nine-loops-subway, dst: three, type: built_with, evidence: https://discourse.threejs.org/t/nine-loops-subway-an-exit-8-style-anomaly-loop-game-in-three-js-mobile-en-ja-online-leaderboard/95932 }
+  - { src: nine-loops-subway, dst: tripo, type: built_with, evidence: https://discourse.threejs.org/t/nine-loops-subway-an-exit-8-style-anomaly-loop-game-in-three-js-mobile-en-ja-online-leaderboard/95932 }
+  - { src: nine-loops-subway, dst: mixamo, type: built_with, evidence: https://discourse.threejs.org/t/nine-loops-subway-an-exit-8-style-anomaly-loop-game-in-three-js-mobile-en-ja-online-leaderboard/95932 }
+  - { src: open-gpu-benchmarker, dst: three, type: built_with, evidence: https://discourse.threejs.org/t/open-gpu-benchmarker-a-browser-gpu-benchmark-where-the-entire-city-is-generated-in-code/95919 }
+  - { src: eroded-landscape, dst: three, type: built_with, evidence: https://discourse.threejs.org/t/eroded-landscape-prototype/95834 }
+  - { src: react-three-fiber, dst: three, type: depends_on }
+  - { src: drei, dst: react-three-fiber, type: depends_on }
+  - { src: types-three, dst: three, type: integrates_with }
+
+insights:
+  - entities: [meep]
+    claim_zh: WebGPU 管线编译无法缓存，小特效用 compute 内的虚拟机比逐特效着色器更划算。
+    claim_en: WebGPU pipeline compilation cannot be cached, so a VM inside one compute shader beats per-effect shaders for small effects.
+    author: Alex Goldring
+    evidence_level: E0
+    evidence: https://discourse.threejs.org/t/gpu-driven-particle-system/94233
+  - entities: [nine-loops-subway, three]
+    claim_zh: 用 renderer.compileAsync 预热着色器，新物体首次出现约省 0.9 秒。
+    claim_en: Warming shaders with renderer.compileAsync saves about 0.9 s when a new object first appears.
+    author: DESIGN OFFICE NINE
+    reported_effect: 约 0.9 秒
+    evidence_level: E0
+    evidence: https://discourse.threejs.org/t/nine-loops-subway-an-exit-8-style-anomaly-loop-game-in-three-js-mobile-en-ja-online-leaderboard/95932
+
+# Feed events for the fixture week. decision/showcase (0–1) follow PLAN §12 value table: high .8, mid .5, low .25.
+events:
+  - { entity: meep, type: demo_published, at: 2026-10-27T09:00:00Z, importance: 0.82, decision: 0.8, showcase: 0.65,
+      title: "Meep: particles sample a GPU fluid wind field",
+      zh: "Meep：粒子开始采样 GPU 流体风场",
+      summary_zh: "所有发射器共用一次 compute 调度；特效图编译为指令集，在 compute 着色器内的虚拟机执行，新增特效无需新建管线。",
+      source: https://discourse.threejs.org/t/gpu-driven-particle-system/94233 }
+  - { entity: nine-loops-subway, type: demo_published, at: 2026-10-26T06:00:00Z, importance: 0.6, decision: 0.5, showcase: 0.5,
+      title: "NINE LOOPS: SUBWAY — a shipped game built with Tripo → Mixamo",
+      zh: "NINE LOOPS: SUBWAY：Tripo → Mixamo 做出的上线游戏",
+      summary_zh: "纯 three.js 的移动端 Web 游戏。后台预加载下一圈资源；每圈经服务端校验后才计入排行榜。首屏 17–20 MB。",
+      source: https://discourse.threejs.org/t/nine-loops-subway-an-exit-8-style-anomaly-loop-game-in-three-js-mobile-en-ja-online-leaderboard/95932 }
+  - { entity: open-gpu-benchmarker, type: demo_published, at: 2026-10-26T12:00:00Z, importance: 0.3, decision: 0.25, showcase: 0.8,
+      title: "Open GPU Benchmarker: a city generated entirely in code",
+      zh: "Open GPU Benchmarker：完全由代码生成的城市",
+      summary_zh: "按种子生成的雨夜城市，96 秒固定航线，结束时给出平均帧率、1% / 5% 低帧和瓶颈判断。",
+      source: https://discourse.threejs.org/t/open-gpu-benchmarker-a-browser-gpu-benchmark-where-the-entire-city-is-generated-in-code/95919 }
+  - { entity: eroded-landscape, type: demo_published, at: 2026-10-24T10:00:00Z, importance: 0.3, decision: 0.25, showcase: 0.8,
+      title: "Eroded Landscape prototype",
+      zh: "Eroded Landscape：WebGPU 实时程序化山脉",
+      summary_zh: "WebGPU 着色器生成的侵蚀山地，分块多分辨率保帧率。",
+      source: https://discourse.threejs.org/t/eroded-landscape-prototype/95834 }

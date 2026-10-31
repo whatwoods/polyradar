@@ -1,0 +1,22 @@
+{
+  "name": "@polyradar/db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./facts": "./src/facts.ts", "./queries/api": "./src/queries/api.ts", "./queries/entities": "./src/queries/entities.ts" },
+  "scripts": {
+    "migrate": "tsx src/migrate.ts",
+    "seed": "tsx src/seed.ts",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "pg": "^8.23.1",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "@types/pg": "^8",
+    "tsx": "^4.23.15",
+    "typescript": "6.0.3"
+  }
+}

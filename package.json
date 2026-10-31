@@ -1,0 +1,19 @@
+{
+  "name": "polyradar",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.8.0",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "db:init": "sh scripts/pg.sh init",
+    "db:start": "sh scripts/pg.sh start",
+    "db:stop": "sh scripts/pg.sh stop",
+    "db:migrate": "pnpm --filter @polyradar/db migrate",
+    "seed": "pnpm --filter @polyradar/db seed",
+    "apidiff": "pnpm --filter @polyradar/apidiff run ingest",
+    "dev": "pnpm --filter @polyradar/web dev",
+    "build": "pnpm --filter @polyradar/web build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test"
+  }
+}
