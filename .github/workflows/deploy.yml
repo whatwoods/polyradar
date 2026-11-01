@@ -1,4 +1,4 @@
-# On push to main: check, migrate and seed Neon, then publish the site.
+# On push to main: migrate and seed Neon, then publish the site (ci.yml does the checks).
 name: deploy
 on:
   push:
@@ -23,8 +23,6 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm typecheck
-      - run: pnpm test
       - run: pnpm db:migrate
       - run: pnpm seed
       - run: pnpm --filter @polyradar/web ship

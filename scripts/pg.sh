@@ -1,6 +1,6 @@
 #!/bin/sh
 # Local Postgres 17 + pgvector cluster inside the repo (.pgdata), port 54317.
-# Production runs Postgres in Docker Compose; this is for development only.
+# Development only; production uses Neon (see docs/HANDOFF.md).
 set -e
 export LC_ALL=en_US.UTF-8
 PG_BIN="${PG_BIN:-/opt/homebrew/opt/postgresql@17/bin}"

@@ -345,6 +345,8 @@
 
 ## 7. 技术架构
 
+> 实际实现与本节有出入：队列和部署改成了 Cloudflare Workers + GitHub Actions + Neon，原因与现状见 [docs/HANDOFF.md](docs/HANDOFF.md)。
+
 ### 7.1 选型与理由
 
 | 层 | 选择 | 理由 / 放弃的方案 |

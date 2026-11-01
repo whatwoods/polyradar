@@ -11,3 +11,4 @@ packages/apidiff/src/ts-libs.json
 .open-next/
 .wrangler/
 .dev.vars
+apps/worker/worker-configuration.d.ts
