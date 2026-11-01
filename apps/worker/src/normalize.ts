@@ -6,7 +6,7 @@ import { db, type PoolClient } from '@polyradar/db';
 import { upsertEvidence, writeFact } from '@polyradar/db/facts';
 import { keysFromUrl, keyString, type CanonicalKey } from '@polyradar/db/keys';
 import { PACKAGES } from '@polyradar/apidiff/packages';
-import { detectLang, hrefs, keywordRelevance, stripHtml } from './text.ts';
+import { detectLang, hrefs, keywordRelevance, paperRelevance, stripHtml } from './text.ts';
 
 export type Enqueue = (task: 'apidiff', payload: { package: string; fromMinor: number }) => Promise<void>;
 
@@ -16,7 +16,7 @@ interface Raw {
 }
 
 interface Draft {
-  kind: 'release' | 'post';
+  kind: 'release' | 'post' | 'paper' | 'model_upload';
   title: string;
   text: string;
   urls: string[];
@@ -28,10 +28,10 @@ interface Draft {
   meta?: { stars: number; license: string | null };
 }
 
-export interface NormalizeStats { signals: number; matched: number; releases: number; events: number; /** Post signals to triage next. */ postIds: number[] }
+export interface NormalizeStats { signals: number; matched: number; releases: number; events: number; /** Post, paper and model signals to triage next. */ triageIds: number[] }
 
 export async function normalize(ids: number[], enqueue: Enqueue): Promise<NormalizeStats> {
-  const stats: NormalizeStats = { signals: 0, matched: 0, releases: 0, events: 0, postIds: [] };
+  const stats: NormalizeStats = { signals: 0, matched: 0, releases: 0, events: 0, triageIds: [] };
   if (!ids.length) return stats;
   const { rows } = await db().query<Raw>(
     `select r.id, r.external_id, r.url, r.published_at, r.fetched_at, r.payload, r.backfill,
@@ -112,6 +112,41 @@ function draft(raw: Raw): Draft | null {
         relevance: Math.max(raw.source_kind === 'reddit' ? 0.4 : 0.3, keywordRelevance(`${p.title}\n${text}`)),
       };
     }
+    case 'arxiv': {
+      const links = [...`${p.comment ?? ''} ${p.summary}`.matchAll(/https?:\/\/[^\s,;)]+[^\s,;.)]/g)].map((m) => m[0]);
+      const graphics = p.primary_category === 'cs.GR';
+      return {
+        kind: 'paper', title: p.title, text: [p.summary, p.comment].filter(Boolean).join('\n\n'), urls: [raw.url!, ...links],
+        native: [{ type: 'arxiv', key: p.id }], linked: [],
+        relevance: Math.max(graphics ? 0.4 : 0.25, keywordRelevance(`${p.title}\n${p.summary}`)),
+      };
+    }
+    case 'hf_papers': {
+      const urls = [raw.url!, `https://arxiv.org/abs/${p.id}`, p.github, p.project_page].filter(Boolean) as string[];
+      return {
+        kind: 'paper', title: p.title, text: `${p.summary}\n\nKeywords: ${(p.keywords ?? []).join(', ')}`, urls,
+        native: [{ type: 'arxiv', key: p.id }], linked: [],
+        relevance: paperRelevance(`${p.title}\n${p.summary}\n${(p.keywords ?? []).join(' ')}`),
+      };
+    }
+    case 'hf_models': {
+      const urls = [raw.url!, ...(p.arxiv as string[]).map((id) => `https://arxiv.org/abs/${id}`)];
+      // A model without a card says nothing we could index.
+      return {
+        kind: 'model_upload', title: p.id, text: p.card ?? '', urls,
+        native: [{ type: 'hf', key: String(p.id).toLowerCase() }], linked: [],
+        relevance: p.card ? Math.max(0.4, keywordRelevance(p.card)) : 0.1,
+      };
+    }
+    case 'bluesky': {
+      const links = (p.links as string[]).filter((h) => !isMedia(h));
+      const text = [p.text, p.embed_title, p.embed_description].filter(Boolean).join('\n');
+      return {
+        kind: 'post', title: String(p.text || p.embed_title || '').split('\n')[0]!.slice(0, 140) || '(no text)', text, urls: [raw.url!, ...links],
+        native: [], linked: linkKeys(links),
+        relevance: Math.max(0.3, keywordRelevance(text)),
+      };
+    }
     default:
       return null;
   }
@@ -165,7 +200,7 @@ async function normalizeOne(c: PoolClient, raw: Raw, enqueue: Enqueue, stats: No
      [...new Set(keys.map(keyString))], entityId != null ? Math.max(d.relevance, 0.8) : d.relevance, entityId],
   );
   stats.signals++;
-  if (d.kind === 'post') stats.postIds.push(Number(sig.rows[0]!.id));
+  if (d.kind !== 'release') stats.triageIds.push(Number(sig.rows[0]!.id));
   if (entityId == null) return;
   stats.matched++;
   await c.query('update entity set last_activity_at = greatest(last_activity_at, $2) where id = $1', [entityId, at]);

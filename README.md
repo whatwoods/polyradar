@@ -25,7 +25,7 @@ pnpm worker         # 常驻：按 seeds/sources.yaml 的频率轮询，处理�
 |---|---|
 | `packages/db` | 迁移、种子加载、事实写入规则（§8.3）、共享查询层 |
 | `packages/apidiff` | npm 包下载、TypeScript Compiler API 提取 .d.ts 符号、相邻版本 diff |
-| `apps/worker` | Graphile Worker 任务、采集器（GitHub、npm、Discourse、HN、RSS/Reddit）、RawItem→Signal、规范键解析、分类（规则 + LLM）、建实体与聚类、带证据的事实抽取 |
+| `apps/worker` | Graphile Worker 任务、采集器（GitHub、npm、Discourse、HN、RSS/Reddit、arXiv、HF 论文与模型、Bluesky Jetstream）、RawItem→Signal、规范键解析、分类（规则 + LLM）、建实体与聚类、带证据的事实抽取 |
 | `packages/llm` | OpenAI 兼容适配层：结构化输出及降级、zod 校验、按模型+输入缓存、`llm_call` 记账 |
 | `apps/web` | 网站、REST `/v1/*`、MCP `/mcp`、`/e/{slug}.md`、`/llms.txt`、`/feed.json` |
 | `seeds/` | 能力树、属性注册表、来源、手工实体（含 2026-10-24 周验收样例） |

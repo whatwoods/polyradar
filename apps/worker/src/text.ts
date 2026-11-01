@@ -52,3 +52,11 @@ export function keywordRelevance(s: string): number {
   const weak = WEAK.filter((r) => r.test(s)).length;
   return Math.min(1, strong * 0.35 + weak * 0.12);
 }
+
+// Papers are mostly scored by the model; this only keeps obviously off-topic
+// ones (LLM agents, finance, robotics-only) from reaching it.
+const PAPER_TERMS = /\b3d\b|\b4d\b|gaussian|splat|nerf|\bmesh|world (model|generation)|\bgames?\b|procedural|texture|avatar|\brig(ging)?\b|animation|scene (generation|reconstruction|synthesis)|voxel|point cloud|render/i;
+
+export function paperRelevance(s: string): number {
+  return Math.max(keywordRelevance(s), PAPER_TERMS.test(s) ? 0.3 : 0);
+}

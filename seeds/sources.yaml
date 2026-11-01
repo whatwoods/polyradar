@@ -19,3 +19,24 @@
 - { slug: chrome-blog, kind: rss, tier: T1, interval: 3600, config: { url: https://developer.chrome.com/static/blog/feed.xml, keywords: [webgpu, webgl, gpu, wgsl, webxr] } }
 - { slug: babylonjs-blog, kind: rss, tier: T1, interval: 3600, config: { url: https://babylonjs.medium.com/feed } }
 - { slug: hf-blog, kind: rss, tier: T1, interval: 3600, config: { url: https://hf.co/blog/feed.xml, keywords: [3d, mesh, gaussian, splat, world model, game, texture, rig] } }
+- slug: arxiv
+  kind: arxiv
+  tier: T2
+  interval: 3600
+  config:
+    categories: [cs.GR]
+    keyword_categories: [cs.CV, cs.AI, cs.HC, cs.LG]
+    keywords: [gaussian splatting, 3D generation, text-to-3D, image-to-3D, mesh generation, 3D asset, texture generation, procedural generation, world model, game generation, neural rendering, WebGPU, WebGL, rigging]
+    backfill_days: 8
+- { slug: hf-daily-papers, kind: hf_papers, tier: T1, interval: 1800, config: { backfill_days: 8 } }
+- { slug: hf-models-3d, kind: hf_models, tier: T1, interval: 1800, config: { pipeline_tags: [image-to-3d, text-to-3d], backfill_days: 3, max_cards: 60 } }
+# Stream, not polled: the worker keeps it connected. interval is the expected
+# flush period, so the health page can flag it when it goes quiet.
+- slug: bluesky
+  kind: bluesky
+  tier: T0
+  interval: 60
+  config:
+    keywords: [three.js, threejs, webgpu, webgl, wgsl, gaussian splatting, gaussian splat, react three fiber, babylon.js, babylonjs, playcanvas, "#gamedev #webgl", procedural generation]
+    dids: []
+    skip_replies: true

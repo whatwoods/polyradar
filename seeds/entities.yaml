@@ -146,6 +146,7 @@ entities:
     importance: 0.05
     summary_zh: 用样条约束动态高斯泼溅的运动。无代码、无 Web 播放器，仅入索引。
     summary_en: Spline-constrained motion for dynamic Gaussian splats. No code or web player yet.
+    keys: { arxiv: "2610.35224" }
     capabilities: [render/gaussian-splatting/dynamic]
     facts:
       - { attr: web_readiness, value: none, method: human, from: 2026-10-27, evidence: { url: https://arxiv.org/list/cs.CV/new } }

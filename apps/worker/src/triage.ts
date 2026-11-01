@@ -11,6 +11,14 @@ import { promote } from './promote.ts';
 const RULE_GATE = 0.25;
 const CONCURRENCY = 6;
 
+/** Sources whose items are the subject (a paper, a model), not a post about one. */
+export const SELF_SUBJECT = new Set(['arxiv', 'hf_papers', 'hf_models']);
+
+// Research items are judged from a web developer's seat: code alone does not
+// make a paper usable, and a benchmark for video world models reaches no one
+// building for the browser yet. Kept out of the system prompt so post verdicts stay cached.
+const PAPER_SCORING = `Scoring note for papers and models: usable at most 0.4 unless there is a browser demo, a web-ready output (glTF/GLB, splats a web viewer can load) or a package developers can call today; reach at most 0.3 unless it directly changes how web 3D, 3D assets or games get made; benchmarks and evaluations of models are evidence for model choice, not usable tools.`;
+
 export const KINDS = ['demo', 'game', 'library', 'tool', 'model', 'paper', 'tutorial', 'article', 'question', 'job', 'news', 'other'] as const;
 
 // Hosts that can be where a post lives or a video of the thing, but never the thing itself.
@@ -80,11 +88,12 @@ function userPrompt(s: SignalForTriage): string {
   // The forum post's own URL is not one of its links.
   const links = s.urls.filter((u) => u !== s.post_url || s.source_kind !== 'discourse').slice(0, 12);
   return [
-    `source: ${s.source_kind}${s.category ? ` / ${s.category}` : ''}`,
+    `source: ${s.source_kind}${s.category ? ` / ${s.category}` : ''}${SELF_SUBJECT.has(s.source_kind) ? ' (the item is the paper or model itself)' : ''}`,
     `title: ${s.title}`,
     s.author ? `author: ${s.author}` : null,
     `links:\n${links.map((u) => `- ${u}`).join('\n') || '- (none)'}`,
     `text:\n${s.text.slice(0, 3500)}`,
+    SELF_SUBJECT.has(s.source_kind) ? PAPER_SCORING : null,
   ].filter(Boolean).join('\n');
 }
 
@@ -118,11 +127,11 @@ export async function loadSignals(ids: number[]): Promise<SignalForTriage[]> {
   const { rows } = await db().query<SignalForTriage>(
     `select g.id, g.raw_item_id, g.title, coalesce(g.text, '') as text, g.urls, coalesce(g.relevance, 0) as relevance, g.entity_id,
             s.kind as source_kind, r.payload->>'category' as category,
-            coalesce(r.payload->>'name', r.payload->>'username', r.payload->>'author') as author,
+            coalesce(r.payload->>'name', r.payload->>'username', r.payload->>'author', r.payload->'authors'->>0, r.payload->>'did') as author,
             coalesce(r.published_at, r.fetched_at) as published_at, r.url as post_url,
             r.payload->>'topic_url' as thread_url, r.payload->>'image_url' as image_url
      from signal g join raw_item r on r.id = g.raw_item_id join source s on s.id = r.source_id
-     where g.id = any($1) and g.kind = 'post' order by g.id`, [ids]);
+     where g.id = any($1) and g.kind in ('post', 'paper', 'model_upload') order by g.id`, [ids]);
   return rows;
 }
 
@@ -154,7 +163,8 @@ export interface Judgement { t: Triage; subject: string | null; caps: string[]; 
 /** The LLM verdict plus the checks applied to it; no writes. Also used by the eval. */
 export async function judge(ctx: Context, s: SignalForTriage): Promise<Judgement> {
   const t = await complete({ purpose: 'triage-v4', tier: 'fast', system: systemPrompt(ctx), user: userPrompt(s), schema: schema(ctx) });
-  const subject = checkSubject(t.subject_url, s.urls);
+  // Papers and model pages are the thing itself, whoever "posted" them.
+  const subject = SELF_SUBJECT.has(s.source_kind) ? s.post_url : checkSubject(t.subject_url, s.urls);
   const caps = leafCapabilities(t.capabilities);
   const decision = t.in_scope ? decisionValue(t.decision) : 0;
   // Tools with their own page (benchmarks, viewers) belong in the gallery too; repos do not.

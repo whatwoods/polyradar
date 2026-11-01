@@ -6,12 +6,25 @@ import { db, type PoolClient } from '@polyradar/db';
 import { upsertEvidence } from '@polyradar/db/facts';
 import { keysFromUrl, keyString } from '@polyradar/db/keys';
 import { extractFacts, quoteIn } from './extract.ts';
-import type { Context, SignalForTriage, Triage, TriageStats } from './triage.ts';
+import { SELF_SUBJECT, type Context, type SignalForTriage, type Triage, type TriageStats } from './triage.ts';
 
 const PROMOTABLE = new Set(['demo', 'game', 'library', 'tool', 'model']);
-const ENTITY_TYPE: Record<string, string> = { demo: 'demo', game: 'game', library: 'library', tool: 'tool', model: 'model' };
+const ENTITY_TYPE: Record<string, string> = { demo: 'demo', game: 'game', library: 'library', tool: 'tool', model: 'model', paper: 'paper' };
 /** A post joins an existing event about the same thread within this window (PLAN §3.4 uses 48 h for same-type signals). */
 const CLUSTER_DAYS = 14;
+
+/**
+ * Which feed event a promoted item gets, if any. A paper without code is
+ * indexed silently and gets its event once code appears (PLAN §12 #4).
+ */
+function eventType(s: SignalForTriage, t: Triage, created: boolean): string | null {
+  if (SELF_SUBJECT.has(s.source_kind)) {
+    if (t.kind === 'paper') return s.urls.some((u) => /github\.com\/[^/]+\/[^/]+/.test(u)) ? 'paper_with_code' : null;
+    return created ? 'new_entity' : null;
+  }
+  if (!created && !(t.is_author && PROMOTABLE.has(t.kind))) return null;
+  return t.kind === 'demo' || t.kind === 'game' ? 'demo_published' : 'new_entity';
+}
 
 export function slugify(name: string): string {
   return name.normalize('NFKD').toLowerCase().replace(/['\u2019]/g, '').replace(/[^\w\s-]/g, ' ').replace(/[\s_]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 48).replace(/-$/, '');
@@ -56,9 +69,10 @@ async function promoteIn(
 
   let created = false;
   if (entityId == null) {
-    if (!(PROMOTABLE.has(t.kind) && t.is_author && t.subject_url)) return null;
-    // Unnamed projects are known by their address.
-    t = { ...t, name: t.name ?? new URL(t.subject_url).hostname.replace(/^www\./, '') };
+    const self = SELF_SUBJECT.has(s.source_kind);
+    if (!((PROMOTABLE.has(t.kind) || (self && t.kind === 'paper')) && (t.is_author || self) && t.subject_url)) return null;
+    // Unnamed projects are known by their address; papers by their title.
+    t = { ...t, name: t.name ?? (self ? s.title : new URL(t.subject_url).hostname.replace(/^www\./, '')) };
     entityId = await createEntity(c, ctx, s, t, scores.decision);
     created = true;
     stats.created++;
@@ -73,13 +87,13 @@ async function promoteIn(
   const threads = [s.thread_url, s.post_url, ...s.urls].filter(Boolean) as string[];
   const existing = await c.query<{ id: string }>(
     `select id from event
-     where (source_url = any($1) or (entity_id = $3 and type in ('demo_published', 'new_entity')))
+     where (source_url = any($1) or (entity_id = $3 and type in ('demo_published', 'new_entity', 'paper_with_code')))
        and occurred_at > $2::timestamptz - interval '${CLUSTER_DAYS} days'
      order by occurred_at desc limit 1`, [threads, s.published_at, entityId]);
   let eventId = existing.rows[0]?.id ?? null;
 
-  if (!eventId && (created || (t.is_author && PROMOTABLE.has(t.kind)))) {
-    const type = t.kind === 'demo' || t.kind === 'game' ? 'demo_published' : 'new_entity';
+  const type = eventId ? null : eventType(s, t, created);
+  if (type) {
     const ins = await c.query<{ id: string }>(
       `insert into event (entity_id, type, occurred_at, importance, decision_value, showcase_value, title, title_zh, summary_en, summary_zh, source_url, payload, cluster_key)
        values ($1, $2, $3, $4, $4, $5, $6, $7, $8, $9, $10, $11, $12)

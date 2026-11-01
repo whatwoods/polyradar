@@ -3,7 +3,7 @@
 import { createHash } from 'node:crypto';
 import { db } from '@polyradar/db';
 import { COLLECTORS } from './collectors/index.ts';
-import type { SourceRow } from './collectors/types.ts';
+import type { RawInput, SourceRow } from './collectors/types.ts';
 
 export interface PollResult { slug: string; fetched: number; inserted: number[]; warnings: string[] }
 
@@ -29,37 +29,47 @@ export async function pollSource(slug: string, log: (line: string) => void = con
       warn: (line) => { warnings.push(line); log(`[${slug}] warn ${line}`); },
     });
 
-    const records = items.map((it) => ({
-      external_id: it.external_id,
-      url: it.url,
-      published_at: it.published_at?.toISOString() ?? null,
-      payload: it.payload,
-      backfill: it.backfill ?? false,
-      content_hash: createHash('sha256').update(JSON.stringify(it.payload)).digest('hex'),
-    }));
-    const ins = await pool.query<{ id: string }>(
-      `insert into raw_item (source_id, external_id, url, published_at, content_hash, payload, backfill)
-       select $1, r.external_id, r.url, r.published_at, r.content_hash, r.payload, r.backfill
-       from jsonb_to_recordset($2::jsonb) as r(external_id text, url text, published_at timestamptz, content_hash text, payload jsonb, backfill boolean)
-       on conflict (source_id, external_id) do nothing
-       returning id`,
-      [source.id, JSON.stringify(records)],
-    );
-    const inserted = ins.rows.map((r) => Number(r.id));
-
     state.warnings = warnings;
-    await pool.query(
-      `update source set state = $2, last_run_at = now(), last_success_at = now(), last_error = null, last_item_count = $3,
-         lag_p90_sec = (select percentile_cont(0.9) within group (order by extract(epoch from fetched_at - published_at))::int
-                        from raw_item where source_id = $1 and not backfill and published_at is not null
-                          and fetched_at > now() - interval '7 days')
-       where id = $1`,
-      [source.id, JSON.stringify(state), inserted.length],
-    );
+    const inserted = await storeRun(source.id, items, state);
     return { slug, fetched: items.length, inserted, warnings };
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    await pool.query('update source set last_run_at = now(), last_error = $2, last_error_at = now() where id = $1', [source.id, msg.slice(0, 1000)]);
+    await recordError(source.id, err);
     throw err;
   }
+}
+
+/** Saves a run's items (deduped, immutable) and marks the source healthy. Shared by pollers and streams. */
+export async function storeRun(sourceId: number, items: RawInput[], state: Record<string, unknown>): Promise<number[]> {
+  const pool = db();
+  const records = items.map((it) => ({
+    external_id: it.external_id,
+    url: it.url,
+    published_at: it.published_at?.toISOString() ?? null,
+    payload: it.payload,
+    backfill: it.backfill ?? false,
+    content_hash: createHash('sha256').update(JSON.stringify(it.payload)).digest('hex'),
+  }));
+  const ins = await pool.query<{ id: string }>(
+    `insert into raw_item (source_id, external_id, url, published_at, content_hash, payload, backfill)
+     select $1, r.external_id, r.url, r.published_at, r.content_hash, r.payload, r.backfill
+     from jsonb_to_recordset($2::jsonb) as r(external_id text, url text, published_at timestamptz, content_hash text, payload jsonb, backfill boolean)
+     on conflict (source_id, external_id) do nothing
+     returning id`,
+    [sourceId, JSON.stringify(records)],
+  );
+  const inserted = ins.rows.map((r) => Number(r.id));
+  await pool.query(
+    `update source set state = $2, last_run_at = now(), last_success_at = now(), last_error = null, last_item_count = $3,
+       lag_p90_sec = (select percentile_cont(0.9) within group (order by extract(epoch from fetched_at - published_at))::int
+                      from raw_item where source_id = $1 and not backfill and published_at is not null
+                        and fetched_at > now() - interval '7 days')
+     where id = $1`,
+    [sourceId, JSON.stringify(state), inserted.length],
+  );
+  return inserted;
+}
+
+export async function recordError(sourceId: number, err: unknown): Promise<void> {
+  const msg = err instanceof Error ? err.message : String(err);
+  await db().query('update source set last_run_at = now(), last_error = $2, last_error_at = now() where id = $1', [sourceId, msg.slice(0, 1000)]);
 }

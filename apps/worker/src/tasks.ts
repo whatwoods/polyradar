@@ -14,7 +14,7 @@ const schedule_sources: Task = async (_payload, helpers) => {
   // Claiming the slot here (last_run_at) keeps a slow run from being queued twice.
   const { rows } = await db().query<{ slug: string }>(
     `update source set last_run_at = now()
-     where enabled and (last_run_at is null or last_run_at + interval_sec * interval '1 second' <= now())
+     where enabled and kind <> 'bluesky' and (last_run_at is null or last_run_at + interval_sec * interval '1 second' <= now())
      returning slug`);
   for (const { slug } of rows) {
     await helpers.addJob('poll_source', { slug }, { jobKey: `poll:${slug}`, maxAttempts: 1 });
@@ -35,11 +35,11 @@ const normalizeTask: Task = async (payload, helpers) => {
     // One diff per package at a time; a newer request replaces a queued one.
     await helpers.addJob(task, p, { jobKey: `${task}:${p.package}`, queueName: task });
   });
-  const { postIds, ...counts } = stats;
+  const { triageIds, ...counts } = stats;
   helpers.logger.info(`normalized ${ids.length}: ${JSON.stringify(counts)}`);
-  if (postIds.length && llmConfigured()) {
-    for (let i = 0; i < postIds.length; i += 50) {
-      await helpers.addJob('triage', { ids: postIds.slice(i, i + 50) }, { queueName: 'triage' });
+  if (triageIds.length && llmConfigured()) {
+    for (let i = 0; i < triageIds.length; i += 50) {
+      await helpers.addJob('triage', { ids: triageIds.slice(i, i + 50) }, { queueName: 'triage' });
     }
   }
 };
