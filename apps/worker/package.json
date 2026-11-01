@@ -4,26 +4,29 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "tsx src/worker.ts",
     "collect": "tsx src/collect.ts",
     "test": "node --import tsx --test test/*.test.ts",
-    "typecheck": "tsc -p .",
-    "eval": "tsx src/eval.ts"
+    "typecheck": "wrangler types --include-runtime=true >/dev/null && tsc -p .",
+    "eval": "tsx src/eval.ts",
+    "dev": "node scripts/dev.mjs",
+    "ship": "wrangler deploy"
   },
   "dependencies": {
+    "@cloudflare/containers": "^0.3.7",
     "@polyradar/apidiff": "workspace:*",
     "@polyradar/db": "workspace:*",
-    "fast-xml-parser": "^5.11.2",
-    "graphile-worker": "^0.18.0",
-    "semver": "^7.7.3",
     "@polyradar/llm": "workspace:*",
-    "zod": "^4.6.7",
-    "yaml": "^2.9.1"
+    "fast-xml-parser": "^5.11.2",
+    "semver": "^7.7.3",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261031.1",
     "@types/node": "^24",
+    "@types/semver": "^7",
     "tsx": "^4.23.15",
     "typescript": "6.0.3",
-    "@types/semver": "^7"
+    "wrangler": "4.156.0"
   }
 }

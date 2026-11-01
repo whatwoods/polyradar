@@ -1,0 +1,53 @@
+// Background half of Polyradar on Cloudflare: cron → queues → jobs, a Durable
+// Object holding the Bluesky stream, and a container for API extraction.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "polyradar-jobs",
+  "main": "src/cf/index.ts",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "limits": { "cpu_ms": 300000 },
+  "triggers": { "crons": ["* * * * *"] },
+  "vars": {
+    "LLM_BASE_URL": "https://api.lisa.wayai.cc/v1",
+    "LLM_MODEL_FAST": "gemini-3.8-flash-high",
+    "LLM_MODEL_SMART": "gemini-3.8-flash-high"
+  },
+  // Secrets: LLM_API_KEY, GITHUB_TOKEN (wrangler secret put …)
+  "hyperdrive": [
+    { "binding": "HYPERDRIVE", "id": "REPLACE_WITH_HYPERDRIVE_ID", "localConnectionString": "postgres://way:local@localhost:54317/polyradar" }
+  ],
+  "queues": {
+    "producers": [
+      { "binding": "JOBS", "queue": "polyradar-jobs" },
+      { "binding": "SERIAL", "queue": "polyradar-serial" }
+    ],
+    "consumers": [
+      // Polling and normalizing: independent, several at once.
+      { "queue": "polyradar-jobs", "max_batch_size": 1, "max_concurrency": 8, "max_retries": 2, "dead_letter_queue": "polyradar-dead" },
+      // Triage (LLM) and apidiff (container): one at a time, like the old serial queues.
+      { "queue": "polyradar-serial", "max_batch_size": 1, "max_concurrency": 1, "max_retries": 3, "dead_letter_queue": "polyradar-dead" }
+    ]
+  },
+  "durable_objects": {
+    "bindings": [
+      { "name": "JETSTREAM", "class_name": "JetstreamStream" },
+      { "name": "APIDIFF", "class_name": "ApiDiffContainer" }
+    ]
+  },
+  "containers": [
+    {
+      "class_name": "ApiDiffContainer",
+      "image": "../../packages/apidiff/Dockerfile",
+      "image_build_context": "../../packages/apidiff",
+      "instance_type": "basic",
+      "max_instances": 1
+    }
+  ],
+  // Local dev runs extraction via APIDIFF_URL (see .dev.vars) instead of building the image.
+  "dev": { "enable_containers": false },
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["JetstreamStream", "ApiDiffContainer"] }
+  ]
+}

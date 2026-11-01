@@ -1,9 +1,9 @@
 // Extracts the public API surface of a .d.ts package with the TypeScript
 // compiler API: every exported symbol plus the members of exported classes and
 // interfaces, each with a normalised signature and its @deprecated note.
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import ts from 'typescript';
+import type { PackageFiles } from './npm.ts';
+import LIBS from './ts-libs.json' with { type: 'json' };
 
 export interface ApiSymbol {
   symbol: string;
@@ -14,18 +14,49 @@ export interface ApiSymbol {
 
 const MAX_SIG = 600;
 
-export function extractApi(pkgDir: string, entries: string[]): ApiSymbol[] {
-  const roots = entries.map((e) => join(pkgDir, e)).filter((p) => existsSync(p));
-  if (roots.length === 0) throw new Error(`no entry points found in ${pkgDir}`);
+const PKG = '/pkg/';
+const LIB = '/lib/';
+const libs = LIBS as Record<string, string>;
 
-  const program = ts.createProgram(roots, {
+/** Everything in memory: package files under /pkg/, TypeScript's default libs under /lib/. */
+function memoryHost(files: PackageFiles, options: ts.CompilerOptions): ts.CompilerHost {
+  const dirs = new Set(['/pkg', '/lib']);
+  for (const f of files.keys()) for (let i = f.indexOf('/'); i > 0; i = f.indexOf('/', i + 1)) dirs.add(PKG + f.slice(0, i));
+  const read = (path: string) =>
+    path.startsWith(PKG) ? files.get(path.slice(PKG.length)) : path.startsWith(LIB) ? libs[path.slice(LIB.length)] : undefined;
+  return {
+    getSourceFile: (path, lang) => {
+      const text = read(path);
+      return text === undefined ? undefined : ts.createSourceFile(path, text, lang);
+    },
+    getDefaultLibFileName: (o) => LIB + ts.getDefaultLibFileName(o),
+    getDefaultLibLocation: () => LIB.slice(0, -1),
+    writeFile: () => {},
+    getCurrentDirectory: () => PKG.slice(0, -1),
+    getCanonicalFileName: (f) => f,
+    useCaseSensitiveFileNames: () => true,
+    getNewLine: () => '\n',
+    fileExists: (path) => read(path) !== undefined,
+    readFile: read,
+    directoryExists: (dir) => dirs.has(dir.replace(/\/$/, '')),
+    getDirectories: () => [],
+    realpath: (p) => p,
+  };
+}
+
+export function extractApi(files: PackageFiles, entries: string[]): ApiSymbol[] {
+  const roots = entries.filter((e) => files.has(e)).map((e) => PKG + e);
+  if (roots.length === 0) throw new Error('no entry points found in package');
+
+  const options: ts.CompilerOptions = {
     noEmit: true,
     skipLibCheck: true,
     types: [],
     target: ts.ScriptTarget.ES2022,
     module: ts.ModuleKind.ESNext,
     moduleResolution: ts.ModuleResolutionKind.Bundler,
-  });
+  };
+  const program = ts.createProgram(roots, options, memoryHost(files, options));
   const checker = program.getTypeChecker();
   const out = new Map<string, ApiSymbol>();
 
@@ -132,7 +163,8 @@ function signatureOf(checker: ts.TypeChecker, sym: ts.Symbol, decl: ts.Declarati
   } else {
     sig = checker.typeToString(checker.getTypeOfSymbolAtLocation(sym, decl), undefined, ts.TypeFormatFlags.NoTruncation);
   }
-  sig = sig.replace(/\s+/g, ' ').trim();
+  // Module paths print as `typeof import("/pkg/src/…")`; keep them package-relative.
+  sig = sig.replace(/\s+/g, ' ').replaceAll('"/pkg/', '"').trim();
   return sig.length > MAX_SIG ? sig.slice(0, MAX_SIG) + '…' : sig;
 }
 

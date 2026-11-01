@@ -17,8 +17,10 @@
     "build": "pnpm --filter @polyradar/web build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "worker": "pnpm --filter @polyradar/worker start",
+    "worker": "pnpm --filter @polyradar/worker dev",
     "collect": "pnpm --filter @polyradar/worker collect",
-    "eval": "pnpm --filter @polyradar/worker eval"
+    "eval": "pnpm --filter @polyradar/worker eval",
+    "preview": "pnpm --filter @polyradar/web preview",
+    "ship": "pnpm --filter @polyradar/worker ship && pnpm --filter @polyradar/web ship"
   }
 }

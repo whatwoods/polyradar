@@ -7,10 +7,13 @@
     "dev": "next dev -p 3100",
     "build": "next build",
     "start": "next start -p 3100",
-    "typecheck": "tsc -p . --noEmit"
+    "typecheck": "tsc -p . --noEmit",
+    "preview": "opennextjs-cloudflare build && wrangler dev --port 8788",
+    "ship": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",
+    "@opennextjs/cloudflare": "1.20.15",
     "@polyradar/db": "workspace:*",
     "next": "^16.4.3",
     "react": "^19.3.1",
@@ -21,6 +24,7 @@
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "wrangler": "4.156.0"
   }
 }

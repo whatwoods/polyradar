@@ -2,13 +2,13 @@
 // chat-completions dialect so any compatible provider works; output is always
 // validated against a zod schema, cached by model + input hash and logged.
 import { createHash } from 'node:crypto';
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import { z } from 'zod';
 import { db } from '@polyradar/db';
 
-const rootEnv = join(import.meta.dirname, '..', '..', '..', '.env');
-if (existsSync(rootEnv)) process.loadEnvFile(rootEnv);
+// Local runs read the repo's .env; Workers get vars and secrets in process.env.
+if (import.meta.dirname) {
+  try { process.loadEnvFile(`${import.meta.dirname}/../../../.env`); } catch { /* no .env */ }
+}
 
 export type Tier = 'fast' | 'smart';
 

@@ -4,24 +4,33 @@ import semver from 'semver';
 import { db } from '@polyradar/db';
 import { upsertEvidence } from '@polyradar/db/facts';
 import { diffApi } from './diff.ts';
-import { extractApi, type ApiSymbol } from './extract.ts';
-import { packument, unpack } from './npm.ts';
+import type { ApiSymbol } from './extract.ts';
+import { packument } from './npm.ts';
 import { PACKAGES } from './packages.ts';
 
+export type { ApiSymbol };
+
+/**
+ * Returns the API surface of one published version. Type-checking a large
+ * package needs a few hundred MB, so in production this runs in a container
+ * (see server.ts) and locally in-process (local.ts).
+ */
+export type Extractor = (req: { typesPackage: string; version: string; tarball: string; entries: string[] }) => Promise<ApiSymbol[]>;
+
 export interface IngestOptions {
+  extract: Extractor;
   fromMinor?: number;
   /** Publish a breaking_change event for versions not seen before (worker runs, not backfills). */
   emitEvents?: boolean;
   log?: (line: string) => void;
 }
 
-export async function ingestPackage(name: string, opts: IngestOptions = {}): Promise<{ versions: string[]; added: string[] }> {
+export async function ingestPackage(name: string, opts: IngestOptions): Promise<{ versions: string[]; added: string[] }> {
   const pkg = PACKAGES[name];
   if (!pkg) throw new Error(`untracked package: ${name}`);
   const fromMinor = opts.fromMinor ?? pkg.fromMinor;
   const log = opts.log ?? console.log;
   const added: string[] = [];
-
 
   const types = await packument(pkg.typesPackage);
   const runtime = await packument(pkg.name);
@@ -62,8 +71,7 @@ export async function ingestPackage(name: string, opts: IngestOptions = {}): Pro
   for (const version of versions) {
     const label = pkg.label(version);
     const t0 = Date.now();
-    const dir = await unpack(pkg.typesPackage, version, types.versions[version]!.dist.tarball);
-    const api = extractApi(dir, pkg.entries);
+    const api = await opts.extract({ typesPackage: pkg.typesPackage, version, tarball: types.versions[version]!.dist.tarball, entries: pkg.entries });
     const minor = semver.minor(version);
     const runtimeVersion = `0.${minor}.0`;
     const releasedAt = runtime.time[runtimeVersion] ?? types.time[version] ?? null;

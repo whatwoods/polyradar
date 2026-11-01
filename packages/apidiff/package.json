@@ -6,12 +6,13 @@
   "scripts": {
     "ingest": "tsx src/ingest.ts",
     "test": "node --import tsx --test test/*.test.ts",
-    "typecheck": "tsc -p ."
+    "typecheck": "tsc -p .",
+    "postinstall": "node scripts/ts-libs.mjs",
+    "serve": "node src/server.ts"
   },
   "dependencies": {
     "@polyradar/db": "workspace:*",
     "semver": "^7.7.3",
-    "tar": "^7.5.22",
     "typescript": "6.0.3"
   },
   "devDependencies": {
@@ -21,6 +22,7 @@
   },
   "exports": {
     ".": "./src/run.ts",
+    "./local": "./src/local.ts",
     "./packages": "./src/packages.ts"
   }
 }
