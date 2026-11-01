@@ -13,9 +13,13 @@ export interface FactInput {
   method: FactMethod;
   confidence?: number;
   evidenceId?: number | null;
+  /** Volatile counters (stars, latest_version): keep history but emit no fact_changed event. */
+  quiet?: boolean;
+  /** Return 'stale' instead of throwing when the open value is newer (out-of-order collectors). */
+  ignoreStale?: boolean;
 }
 
-export type FactWriteResult = 'inserted' | 'unchanged' | 'replaced';
+export type FactWriteResult = 'inserted' | 'unchanged' | 'replaced' | 'stale';
 
 export async function writeFact(c: PoolClient, f: FactInput): Promise<FactWriteResult> {
   const attr = await c.query<{ value_type: string; allowed_values: unknown[] | null }>(
@@ -36,6 +40,7 @@ export async function writeFact(c: PoolClient, f: FactInput): Promise<FactWriteR
   const prev = open.rows[0];
   if (prev && isDeepStrictEqual(prev.value, f.value)) return 'unchanged';
   if (prev && prev.valid_from >= f.at) {
+    if (f.ignoreStale) return 'stale';
     throw new Error(`fact ${f.attribute} for entity ${f.entityId} is newer than ${f.at.toISOString()}`);
   }
 
@@ -49,6 +54,7 @@ export async function writeFact(c: PoolClient, f: FactInput): Promise<FactWriteR
   if (!prev) return 'inserted';
 
   await c.query('update fact set superseded_by = $2 where id = $1', [prev.id, ins.rows[0]!.id]);
+  if (f.quiet) return 'replaced';
   await c.query(
     `insert into event (entity_id, type, occurred_at, importance, title, payload, cluster_key)
      values ($1, 'fact_changed', $2, 0.3, $3, $4, $5)

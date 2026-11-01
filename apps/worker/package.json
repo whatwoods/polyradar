@@ -1,0 +1,25 @@
+{
+  "name": "@polyradar/worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/worker.ts",
+    "collect": "tsx src/collect.ts",
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@polyradar/apidiff": "workspace:*",
+    "@polyradar/db": "workspace:*",
+    "fast-xml-parser": "^5.11.2",
+    "graphile-worker": "^0.18.0",
+    "semver": "^7.7.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "tsx": "^4.23.15",
+    "typescript": "6.0.3",
+    "@types/semver": "^7"
+  }
+}

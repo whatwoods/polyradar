@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { parse } from 'yaml';
 import { closeDb, db } from './index.ts';
 import { upsertEvidence, writeFact, type FactMethod } from './facts.ts';
+import { canonicalKey, type KeyType } from './keys.ts';
 
 const seeds = join(import.meta.dirname, '..', '..', '..', 'seeds');
 const load = async <T>(name: string): Promise<T> => parse(await readFile(join(seeds, name), 'utf8')) as T;
@@ -18,6 +19,7 @@ interface EntitySeed {
   demos?: { url: string; requires: string[] }[];
   media?: { kind: string; file: string; origin: string; attribution: string; width: number; height: number }[];
 }
+interface SourceSeed { slug: string; kind: string; tier: string; interval: number; config: object; enabled?: boolean }
 interface EntitiesFile {
   entities: EntitySeed[];
   relations: { src: string; dst: string; type: string; evidence?: string }[];
@@ -49,6 +51,17 @@ try {
     );
   }
 
+  const sources = await load<SourceSeed[]>('sources.yaml');
+  for (const s of sources) {
+    // state, health columns belong to the collector and are left alone
+    await c.query(
+      `insert into source (slug, kind, tier, interval_sec, config, enabled) values ($1, $2, $3, $4, $5, $6)
+       on conflict (slug) do update set kind = excluded.kind, tier = excluded.tier, interval_sec = excluded.interval_sec,
+         config = excluded.config, enabled = excluded.enabled`,
+      [s.slug, s.kind, s.tier, s.interval, JSON.stringify(s.config), s.enabled ?? true],
+    );
+  }
+
   const file = await load<EntitiesFile>('entities.yaml');
   const ids = new Map<string, number>();
   const authors = new Map<string, string>();
@@ -69,7 +82,7 @@ try {
     for (const [type, key] of Object.entries(e.keys ?? {})) {
       await c.query(
         'insert into entity_key (entity_id, key_type, key) values ($1, $2, $3) on conflict (key_type, key) do update set entity_id = excluded.entity_id',
-        [id, type, key],
+        [id, type, canonicalKey(type as KeyType, key)],
       );
     }
     for (const slug of e.capabilities ?? []) {
@@ -146,7 +159,7 @@ try {
   }
 
   await c.query('commit');
-  console.log(`seeded ${ids.size} entities, ${file.relations.length} relations, ${file.insights.length} insights, ${file.events.length} events`);
+  console.log(`seeded ${sources.length} sources, ${ids.size} entities, ${file.relations.length} relations, ${file.insights.length} insights, ${file.events.length} events`);
 } catch (err) {
   await c.query('rollback');
   throw err;

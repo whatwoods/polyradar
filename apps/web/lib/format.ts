@@ -82,3 +82,25 @@ export function hash01(s: string, salt = 0): number {
   for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
   return ((h >>> 0) % 10000) / 10000;
 }
+
+export function ago(d: Date | null, now = Date.now()): string {
+  if (!d) return '—';
+  const s = Math.max(0, Math.round((now - d.getTime()) / 1000));
+  if (s < 60) return '刚刚';
+  if (s < 3600) return `${Math.floor(s / 60)} 分钟前`;
+  if (s < 86400) return `${Math.floor(s / 3600)} 小时前`;
+  return `${Math.floor(s / 86400)} 天前`;
+}
+
+export function duration(sec: number | null): string {
+  if (sec == null) return '—';
+  if (sec < 60) return `${sec} 秒`;
+  if (sec < 3600) return `${Math.round(sec / 60)} 分钟`;
+  if (sec < 86400) return `${Math.round(sec / 360) / 10} 小时`;
+  return `${Math.round(sec / 8640) / 10} 天`;
+}
+
+export const SOURCE_KIND_ZH: Record<string, string> = {
+  github_repo: 'GitHub', npm: 'npm', discourse: 'Discourse', hn: 'Hacker News', reddit: 'Reddit', rss: 'RSS',
+  arxiv: 'arXiv', hf_papers: 'HF Papers', hf_models: 'HF 模型', bluesky: 'Bluesky', gharchive: 'GH Archive', page_diff: '页面', x: 'X',
+};

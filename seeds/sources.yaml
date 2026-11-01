@@ -1,0 +1,21 @@
+# Source registry (PLAN §4.1). github_repo and npm cover every entity key of
+# that type; the rest list their targets here. Changes go through PR.
+- { slug: github-tracked, kind: github_repo, tier: T0, interval: 600, config: {} }
+- { slug: npm-tracked, kind: npm, tier: T0, interval: 300, config: {} }
+- slug: discourse-threejs
+  kind: discourse
+  tier: T0
+  interval: 600
+  config: { base: https://discourse.threejs.org, categories: [showcase, resources, discussion], backfill_days: 10 }
+- slug: hn
+  kind: hn
+  tier: T0
+  interval: 300
+  config:
+    queries: [three.js, threejs, webgpu, webgl, gaussian splatting, react three fiber, babylon.js, playcanvas, procedural generation, text-to-3d, image-to-3d, world model]
+    backfill_days: 7
+- { slug: reddit-threejs, kind: reddit, tier: T1, interval: 1800, config: { url: https://www.reddit.com/r/threejs/.rss } }
+- { slug: webgpu-com, kind: rss, tier: T1, interval: 1800, config: { url: https://www.webgpu.com/rss.xml } }
+- { slug: chrome-blog, kind: rss, tier: T1, interval: 3600, config: { url: https://developer.chrome.com/static/blog/feed.xml, keywords: [webgpu, webgl, gpu, wgsl, webxr] } }
+- { slug: babylonjs-blog, kind: rss, tier: T1, interval: 3600, config: { url: https://babylonjs.medium.com/feed } }
+- { slug: hf-blog, kind: rss, tier: T1, interval: 3600, config: { url: https://hf.co/blog/feed.xml, keywords: [3d, mesh, gaussian, splat, world model, game, texture, rig] } }

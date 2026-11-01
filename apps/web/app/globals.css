@@ -52,7 +52,14 @@ code, pre, kbd, .mono { font-family: var(--mono); }
 .search { position: relative; }
 .search svg { position: absolute; left: 14px; top: 15px; }
 .search input { width: 200px; height: 44px; padding: 0 16px 0 36px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; color: var(--ink); font: inherit; }
-@media (max-width: 720px) { .header-inner { padding: 8px 16px; } .search input { width: 140px; } }
+@media (max-width: 720px) {
+  .header-inner { padding: 8px 16px 0; column-gap: 12px; }
+  .vsep { display: none; }
+  .search input { width: 104px; }
+  /* Nav gets its own scrollable row so the sticky header stays two lines tall. */
+  .nav { order: 3; width: 100%; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -10px; }
+  .nav a { white-space: nowrap; }
+}
 
 /* Type */
 .h1 { margin: 0; font-size: 44px; font-weight: 650; letter-spacing: -0.01em; line-height: 1.15; }

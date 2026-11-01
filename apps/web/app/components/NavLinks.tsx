@@ -9,6 +9,7 @@ const LINKS = [
   { href: '/search', label: '浏览' },
   { href: '/api-changes/three', label: 'API 变更' },
   { href: '/agents', label: 'Agent 接入' },
+  { href: '/sources', label: '来源' },
 ];
 
 export function NavLinks() {

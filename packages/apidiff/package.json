@@ -18,5 +18,9 @@
     "@types/node": "^24",
     "@types/semver": "^7",
     "tsx": "^4.23.15"
+  },
+  "exports": {
+    ".": "./src/run.ts",
+    "./packages": "./src/packages.ts"
   }
 }

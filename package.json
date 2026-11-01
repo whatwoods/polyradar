@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.8.0",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "db:init": "sh scripts/pg.sh init",
     "db:start": "sh scripts/pg.sh start",
@@ -14,6 +16,8 @@
     "dev": "pnpm --filter @polyradar/web dev",
     "build": "pnpm --filter @polyradar/web build",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test"
+    "test": "pnpm -r test",
+    "worker": "pnpm --filter @polyradar/worker start",
+    "collect": "pnpm --filter @polyradar/worker collect"
   }
 }
