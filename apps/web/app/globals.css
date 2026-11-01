@@ -125,6 +125,7 @@ table.facts td { padding: 12px 8px 12px 0; border-bottom: 1px solid var(--line);
 
 /* Domain map */
 .map { position: relative; height: 520px; overflow: hidden; }
+.map-field { position: absolute; inset: 0; width: 100%; height: 100%; }
 .map-dot { position: absolute; border-radius: 50%; transform: translate(-50%, -50%); }
 .map-label { position: absolute; font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; color: var(--faint); transform: translateX(-50%); white-space: nowrap; }
 .map-entity { position: absolute; display: flex; align-items: center; gap: 8px; transform: translate(-8px, -8px); color: var(--ink); font-size: 13px; font-weight: 500; }

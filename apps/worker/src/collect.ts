@@ -1,21 +1,26 @@
 // One-shot collection without Cloudflare: the same jobs as production, run
 // through an in-process queue. For development and backfills.
 //   pnpm collect                     all enabled polled sources
+//   pnpm collect --due               only those whose interval has elapsed (scheduled runs)
 //   pnpm collect discourse-threejs   one source
 //   pnpm collect --renormalize hn    rebuild signals from stored raw items
 //   pnpm collect --retriage hn       renormalize, then re-run triage (LLM results are cached)
 //   pnpm collect bluesky --seconds=60  listen to a stream for a while
 import { closeDb, db } from '@polyradar/db';
 import { localExtractor } from '@polyradar/apidiff/local';
-import { runJob, type Job } from './jobs.ts';
+import { dueSources, runJob, type Job } from './jobs.ts';
 import { runJetstream } from './streams/jetstream.ts';
 
 const args = process.argv.slice(2);
 const renormalize = args.includes('--renormalize');
 const retriage = args.includes('--retriage');
+const due = args.includes('--due');
 const seconds = Number(args.find((a) => a.startsWith('--seconds='))?.slice(10) ?? 60);
 let slugs = args.filter((a) => !a.startsWith('--'));
-if (!slugs.length) {
+if (due) {
+  slugs = await dueSources();
+  console.log(`due: ${slugs.join(', ') || 'none'}`);
+} else if (!slugs.length) {
   // Streams only run when named.
   slugs = (await db().query<{ slug: string }>(`select slug from source where enabled and kind <> 'bluesky' order by id`)).rows.map((r) => r.slug);
 }

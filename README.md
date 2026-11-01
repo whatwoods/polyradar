@@ -19,32 +19,34 @@ pnpm worker         # 本地跑生产后台：wrangler dev + 每分钟 cron + �
 
 之后再开机只需 `pnpm db:start`。LLM 走 OpenAI 兼容接口，在 `.env` 填 `LLM_BASE_URL`、`LLM_API_KEY`、`LLM_MODEL_FAST/SMART`；未配置时采集照常，只是不做分类。改了提示词或模型后跑 `pnpm eval`（金标准集在 `seeds/eval/`）。设置 `GITHUB_TOKEN` 可解除 GitHub 匿名每小时 60 次的限制。来源状态见 `/sources`。`pnpm worker` 需要 `apps/worker/.dev.vars`（`LLM_API_KEY`、`GITHUB_TOKEN`、`APIDIFF_URL=http://localhost:8099`、`DEV_ENQUEUE=1`）；`pnpm preview` 在本地 Workers 运行时里跑网站（:8788）。
 
-## 部署（Cloudflare）
+## 部署
+
+现在跑在 Cloudflare Workers 免费版 + GitHub Actions：
 
 | 部分 | 运行在 |
 |---|---|
-| 网站、REST、MCP | Worker `polyradar-web`（OpenNext） |
-| 每分钟排期 | `polyradar-jobs` 的 Cron Trigger |
-| 抓取、解析 | Queue `polyradar-jobs`，并发 8 |
-| LLM 分类、apidiff | Queue `polyradar-serial`，并发 1 |
-| Bluesky 实时流 | Durable Object `JetstreamStream`，30 秒一次 alarm 落库并保活 |
-| .d.ts 提取 | Container `ApiDiffContainer`（`packages/apidiff/Dockerfile`），TypeScript 检查器要约 200 MB，Worker 放不下 |
-| 数据库 | 外部 Postgres 17 + pgvector，经 Hyperdrive |
+| 网站、REST、MCP | Worker `polyradar-web`（OpenNext），https://polyradar.wayai.cc ；页面在边缘缓存 10 分钟，过期先回旧页再后台刷新，免费版每次 10 ms CPU 不够首次渲染 |
+| 采集、解析、分类、apidiff | `.github/workflows/collect.yml`，每 15 分钟 `pnpm collect --due`，直连 Neon |
+| 发布 | `.github/workflows/deploy.yml`，推送 main 时检查、迁移、灌种子、发布网站 |
+| 数据库 | Neon Postgres 17 + pgvector；网站经 Hyperdrive 连接 |
 
-需要 Workers 付费版（Containers、5 分钟 CPU 上限）和本机 Docker（构建容器镜像）。首次：
+两个工作流在仓库变量 `POLYRADAR_LIVE` 为 `true` 前不运行。需要的配置：
+
+| 名称 | 类型 | 内容 |
+|---|---|---|
+| `DATABASE_URL` | secret | Neon 直连串 |
+| `LLM_API_KEY` | secret | LLM key |
+| `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` | secret | 能发布 Workers 的 API token 和账户 id |
+| `LLM_BASE_URL` / `LLM_MODEL_FAST` / `LLM_MODEL_SMART` | variable | 同 `.env` |
+
+Hyperdrive：`npx wrangler hyperdrive create polyradar --connection-string=<Neon 直连串> --caching-disabled`，把 id 填进 `apps/web/wrangler.jsonc`。首次把本地数据搬上去：
 
 ```bash
-npx wrangler login
-DATABASE_URL=<postgres 直连串> pnpm db:migrate
-pg_dump -h localhost -p 54317 --data-only --exclude-table=_migration polyradar | psql <postgres 直连串>
-npx wrangler hyperdrive create polyradar --connection-string=<postgres 直连串> --caching-disabled
-npx wrangler queues create polyradar-jobs
-npx wrangler queues create polyradar-serial
-npx wrangler queues create polyradar-dead
-cd apps/worker && npx wrangler secret put LLM_API_KEY && npx wrangler secret put GITHUB_TOKEN
+DATABASE_URL=<Neon 直连串> pnpm db:migrate
+pg_dump -h localhost -p 54317 --data-only --exclude-table=_migration polyradar | psql <Neon 直连串>
 ```
 
-把 Hyperdrive id 填进 `apps/worker/wrangler.jsonc` 和 `apps/web/wrangler.jsonc`，之后每次发布：`pnpm ship`。
+升级 Workers 付费版后可换成全 Cloudflare 后台（`apps/worker/src/cf`：Cron + Queues + Durable Object 跑 Bluesky + Container 跑 apidiff，`pnpm --filter @polyradar/worker ship`），并停掉 collect 工作流。
 
 ## 结构
 

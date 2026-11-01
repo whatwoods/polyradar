@@ -36,6 +36,8 @@
   kind: bluesky
   tier: T0
   interval: 60
+  # Off on the free plan (no always-on Durable Object); keywords rarely match anyway.
+  enabled: false
   config:
     keywords: [three.js, threejs, webgpu, webgl, wgsl, gaussian splatting, gaussian splat, react three fiber, babylon.js, babylonjs, playcanvas, "#gamedev #webgl", procedural generation]
     dids: []

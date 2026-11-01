@@ -1,0 +1,34 @@
+# Background jobs on the Workers free plan: every 15 minutes, poll the sources
+# whose interval has elapsed, then normalize, triage and run apidiff inline,
+# writing straight to Neon. (apps/worker/src/cf does the same on Cloudflare
+# Queues once the account is on the paid plan.)
+name: collect
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+concurrency:
+  group: collect
+  cancel-in-progress: false
+jobs:
+  collect:
+    # Off until the repository variable POLYRADAR_LIVE is 'true' (secrets configured).
+    if: vars.POLYRADAR_LIVE == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm collect --due
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
+          LLM_MODEL_FAST: ${{ vars.LLM_MODEL_FAST }}
+          LLM_MODEL_SMART: ${{ vars.LLM_MODEL_SMART }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
