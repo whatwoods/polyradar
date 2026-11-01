@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getEntity } from '@polyradar/db/queries/entities';
-import { ATTR_ZH, RELATION_ZH, TYPE_ZH, factValue, mediaUrl, ymd } from '@/lib/format';
+import { ATTR_ZH, RELATION_ZH, TYPE_ZH, factValue, mediaUrl, ymd, METHOD_ZH } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,8 +83,10 @@ export default async function EntityPage({ params }: { params: Promise<{ slug: s
                         {factValue(f.attribute, f.value)}
                         {before && <span className="changed">{ymd(new Date(f.valid_from))} 变化</span>}
                       </td>
-                      <td className="mono" style={{ fontSize: 13 }}>
-                        {f.evidence_url ? <a href={f.evidence_url} target="_blank" rel="noreferrer">{f.method}</a> : f.method}
+                      <td style={{ fontSize: 13 }}>
+                        {f.evidence_url
+                          ? <a href={f.evidence_url} target="_blank" rel="noreferrer" title={f.evidence_quote ?? undefined}>{METHOD_ZH[f.method] ?? f.method}</a>
+                          : METHOD_ZH[f.method] ?? f.method}
                       </td>
                     </tr>
                   );

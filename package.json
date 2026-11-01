@@ -18,6 +18,7 @@
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "worker": "pnpm --filter @polyradar/worker start",
-    "collect": "pnpm --filter @polyradar/worker collect"
+    "collect": "pnpm --filter @polyradar/worker collect",
+    "eval": "pnpm --filter @polyradar/worker eval"
   }
 }

@@ -2,13 +2,17 @@
 //   pnpm collect                     all enabled sources
 //   pnpm collect discourse-threejs   one source
 //   pnpm collect --renormalize hn    rebuild signals from stored raw items
+//   pnpm collect --retriage hn       re-run triage on stored signals (LLM results are cached)
 import { closeDb, db } from '@polyradar/db';
 import { ingestPackage } from '@polyradar/apidiff';
+import { llmConfigured } from '@polyradar/llm';
 import { normalize, type Enqueue } from './normalize.ts';
+import { triage } from './triage.ts';
 import { pollSource } from './poll.ts';
 
 const args = process.argv.slice(2);
 const renormalize = args.includes('--renormalize');
+const retriage = args.includes('--retriage');
 let slugs = args.filter((a) => !a.startsWith('--'));
 if (!slugs.length) {
   slugs = (await db().query<{ slug: string }>('select slug from source where enabled order by id')).rows.map((r) => r.slug);
@@ -22,6 +26,13 @@ const enqueue: Enqueue = async (_task, p) => {
 let failed = 0;
 for (const slug of slugs) {
   try {
+    if (retriage) {
+      const ids = (await db().query<{ id: string }>(
+        `select g.id from signal g join raw_item r on r.id = g.raw_item_id join source s on s.id = r.source_id
+         where s.slug = $1 and g.kind = 'post'`, [slug])).rows.map((r) => Number(r.id));
+      console.log(`[${slug}] ${JSON.stringify(await triage(ids))}`);
+      continue;
+    }
     let ids: number[];
     if (renormalize) {
       ids = (await db().query<{ id: string }>(
@@ -31,8 +42,9 @@ for (const slug of slugs) {
       ids = res.inserted;
       console.log(`[${slug}] fetched ${res.fetched}, new ${ids.length}`);
     }
-    const stats = await normalize(ids, enqueue);
+    const { postIds, ...stats } = await normalize(ids, enqueue);
     console.log(`[${slug}] ${JSON.stringify(stats)}`);
+    if (postIds.length && llmConfigured() && !renormalize) console.log(`[${slug}] triage ${JSON.stringify(await triage(postIds))}`);
   } catch (err) {
     failed++;
     console.error(`[${slug}] failed: ${err instanceof Error ? err.message : err}`);

@@ -16,7 +16,9 @@ export function entityMarkdown(e: EntityDetail, origin: string): string {
   if (open.length) {
     lines.push('## Facts', '');
     for (const f of open) {
-      const src = f.evidence_url ? ` ([${f.method}](${f.evidence_url}))` : ` (${f.method})`;
+      const label = f.method === 'llm_extract' ? 'author claim, unverified' : f.method;
+      const quote = f.evidence_quote ? ` "${f.evidence_quote}"` : '';
+      const src = f.evidence_url ? ` ([${label}](${f.evidence_url})${quote})` : ` (${label})`;
       lines.push(`- ${f.attribute} (${ATTR_ZH[f.attribute] ?? f.attribute}): ${factValue(f.attribute, f.value)} — since ${ymd(new Date(f.valid_from))}${src}`);
     }
     const history = e.facts.filter((f) => f.valid_to);

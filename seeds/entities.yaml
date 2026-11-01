@@ -81,7 +81,7 @@ entities:
     importance: 0.7
     summary_zh: 四个 ECS 粒子特效组成的篝火，粒子采样 GPU 流体风场并被火光照亮。
     summary_en: A bonfire built from four ECS particle effects that sample a GPU fluid wind field.
-    keys: { url: https://discourse.threejs.org/t/gpu-driven-particle-system/94233 }
+    keys: { url: https://meep.company-named.com/examples/bonfire/ }
     capabilities: [render/particles/gpu-compute]
     media: [{ kind: image, file: bonfire.png, origin: third_party, attribution: Alex Goldring, width: 464, height: 280 }]
     author: Alex Goldring

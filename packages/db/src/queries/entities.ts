@@ -38,9 +38,9 @@ const FEED_SELECT = `
          coalesce((select array_agg(c.slug order by c.slug) from entity_capability ec join capability c on c.id = ec.capability_id
                    where ec.entity_id = e.id), '{}') as capabilities,
          coalesce(
-           (select m.r2_key from media m where m.entity_id = e.id and m.kind = 'image' order by m.id limit 1),
+           (select coalesce(m.r2_key, m.original_url) from media m where m.entity_id = e.id and m.kind = 'image' order by m.id limit 1),
            -- no own image: borrow one from a demo built with this entity
-           (select m.r2_key from relation r join media m on m.entity_id = r.src_id
+           (select coalesce(m.r2_key, m.original_url) from relation r join media m on m.entity_id = r.src_id
             where r.dst_id = e.id and r.type = 'built_with' and m.kind = 'image' order by m.id limit 1)
          ) as media_path
   from event ev left join entity e on e.id = ev.entity_id`;
@@ -72,7 +72,7 @@ export async function getEntity(slug: string): Promise<EntityDetail | null> {
       `select i.claim_zh, i.claim_en, i.author, i.evidence_level, i.reported_effect, ev.url as evidence_url
        from insight i left join evidence ev on ev.id = i.evidence_id where $1 = any(i.entity_ids) order by i.id`, [e.id]),
     pool.query('select url, requires, status, last_checked_at from demo where entity_id = $1 order by id', [e.id]),
-    pool.query('select kind, r2_key as path, width, height, attribution from media where entity_id = $1 order by id', [e.id]),
+    pool.query('select kind, coalesce(r2_key, original_url) as path, width, height, attribution from media where entity_id = $1 order by id', [e.id]),
     pool.query<FeedEvent>(`${FEED_SELECT} where ev.entity_id = $1 order by ev.occurred_at desc limit 50`, [e.id]),
   ]);
 

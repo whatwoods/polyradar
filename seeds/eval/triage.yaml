@@ -1,0 +1,32 @@
+# Triage gold set (PLAN §9.2, §12). Labels are human judgements from reading
+# each post, not model output. Grow it every week from the editorial picks.
+#   in_scope   belongs in the index at all
+#   runnable   presents something you can open in a browser right now (demo, game, viewer)
+#   entity     slug it must resolve to (existing entity), or "new" when one should be created, or "none"
+#   decision   low (<0.35) | mid (0.35–0.6) | high (≥0.6); omit when not judged
+# PLAN §12 fixture week, 2026-10-24 … 10-30
+- { url: https://discourse.threejs.org/t/open-gpu-benchmarker-a-browser-gpu-benchmark-where-the-entire-city-is-generated-in-code/95919, in_scope: true, runnable: true, entity: open-gpu-benchmarker, decision: low }
+- { url: https://discourse.threejs.org/t/eroded-landscape-prototype/95834, in_scope: true, runnable: true, entity: eroded-landscape, decision: low }
+- { url: https://discourse.threejs.org/t/gpu-driven-particle-system/94233/8, in_scope: true, runnable: true, entity: meep-bonfire }
+- { url: https://discourse.threejs.org/t/nine-loops-subway-an-exit-8-style-anomaly-loop-game-in-three-js-mobile-en-ja-online-leaderboard/95932, in_scope: true, runnable: true, entity: nine-loops-subway, decision: mid }
+# Same week, other posts
+- { url: https://discourse.threejs.org/t/aaa-gtav-style-car-game/95962, in_scope: true, runnable: false, entity: none, note: help request with a video and a download, nothing to open }
+- { url: https://discourse.threejs.org/t/pip-a-three-js-virtual-pet-fruit-fly-cared-for-through-twitch-chat/95920, in_scope: true, runnable: false, entity: none, note: rendered on a Mac and streamed to Twitch }
+- { url: https://discourse.threejs.org/t/editorium-marketplace-and-library-for-3d-assets/96166, in_scope: true, runnable: true, entity: new, note: asset marketplace with in-browser preview and editing }
+- { url: https://discourse.threejs.org/t/a-live-3d-digital-twin-of-my-house-in-three-js-driven-by-home-assistant-procedural-materials-raymarched-smoke-in-browser-4k-video-export/95836, in_scope: true, runnable: false, entity: none, note: says there is no public demo }
+- { url: https://discourse.threejs.org/t/for-hire-3d-website-developer/96156, in_scope: false, runnable: false, entity: none }
+- { url: https://www.reddit.com/r/threejs/comments/1xjb375/yes_threejs_is_cool_blender_too_opus_55_toothank/, in_scope: true, runnable: false, entity: none, note: video only }
+- { url: https://news.ycombinator.com/item?id=50291424, in_scope: false, runnable: false, entity: none, note: 2D video editor }
+- { url: https://discourse.threejs.org/t/forest-environment-built-with-three-js-and-webgpu/96126, in_scope: true, runnable: false, entity: none, note: video only }
+- { url: https://discourse.threejs.org/t/shine-ahoy-a-lighthouse-boat-herding-game-in-three-js-one-plane-sea-shader-100-procedural-mobile/95831, in_scope: true, runnable: true, entity: new }
+- { url: https://discourse.threejs.org/t/boom-bloom-a-firework-chain-reaction-game-in-three-js-analytic-gpu-sparks-100-procedural-mobile/95840, in_scope: true, runnable: true, entity: new }
+- { url: https://discourse.threejs.org/t/procedurally-generated-forbidden-city-full-first-person-walkthrough-zero-external-3d-models/95838, in_scope: true, runnable: true, entity: new }
+- { url: https://discourse.threejs.org/t/salon-noir-a-private-3d-casino-in-the-browser-blackjack-roulette-no-build-step/96131, in_scope: true, runnable: true, entity: new }
+- { url: https://discourse.threejs.org/t/cinderwake-a-survivors-style-arpg-in-the-browser-three-js-webgpu-tsl/96133, in_scope: true, runnable: true, entity: new }
+- { url: https://discourse.threejs.org/t/tessera4x-a-turn-based-hex-strategy-game-in-react-three-fiber-with-every-piece-built-in-code/96165, in_scope: true, runnable: true, entity: new }
+- { url: https://discourse.threejs.org/t/threejs-tower-defense-game/96164, in_scope: true, runnable: true, entity: new }
+- { url: https://discourse.threejs.org/t/new-game-plz-try-respond/95971, in_scope: true, runnable: true, entity: new }
+- { url: https://discourse.threejs.org/t/glint-ai-enhanced-gltf-glb-online-optimizer/96153, in_scope: true, runnable: true, entity: new, note: browser tool }
+- { url: https://pureart-xyz.vercel.app/, in_scope: true, runnable: true, entity: new }
+- { url: https://toji.dev/webgpu-best-practices/, in_scope: true, runnable: false, entity: none, note: article }
+- { url: https://webgpu.com/news/hugging-face-webgpu-kernels-browser-ai/, in_scope: true, runnable: false, entity: none }

@@ -28,10 +28,10 @@ interface Draft {
   meta?: { stars: number; license: string | null };
 }
 
-export interface NormalizeStats { signals: number; matched: number; releases: number; events: number }
+export interface NormalizeStats { signals: number; matched: number; releases: number; events: number; /** Post signals to triage next. */ postIds: number[] }
 
 export async function normalize(ids: number[], enqueue: Enqueue): Promise<NormalizeStats> {
-  const stats: NormalizeStats = { signals: 0, matched: 0, releases: 0, events: 0 };
+  const stats: NormalizeStats = { signals: 0, matched: 0, releases: 0, events: 0, postIds: [] };
   if (!ids.length) return stats;
   const { rows } = await db().query<Raw>(
     `select r.id, r.external_id, r.url, r.published_at, r.fetched_at, r.payload, r.backfill,
@@ -165,6 +165,7 @@ async function normalizeOne(c: PoolClient, raw: Raw, enqueue: Enqueue, stats: No
      [...new Set(keys.map(keyString))], entityId != null ? Math.max(d.relevance, 0.8) : d.relevance, entityId],
   );
   stats.signals++;
+  if (d.kind === 'post') stats.postIds.push(Number(sig.rows[0]!.id));
   if (entityId == null) return;
   stats.matched++;
   await c.query('update entity set last_activity_at = greatest(last_activity_at, $2) where id = $1', [entityId, at]);

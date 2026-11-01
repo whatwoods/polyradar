@@ -2,7 +2,9 @@
 import type { Task, TaskList } from 'graphile-worker';
 import { db } from '@polyradar/db';
 import { ingestPackage } from '@polyradar/apidiff';
+import { llmConfigured } from '@polyradar/llm';
 import { normalize } from './normalize.ts';
+import { triage } from './triage.ts';
 import { pollSource } from './poll.ts';
 
 const CHUNK = 200;
@@ -33,7 +35,19 @@ const normalizeTask: Task = async (payload, helpers) => {
     // One diff per package at a time; a newer request replaces a queued one.
     await helpers.addJob(task, p, { jobKey: `${task}:${p.package}`, queueName: task });
   });
-  helpers.logger.info(`normalized ${ids.length}: ${JSON.stringify(stats)}`);
+  const { postIds, ...counts } = stats;
+  helpers.logger.info(`normalized ${ids.length}: ${JSON.stringify(counts)}`);
+  if (postIds.length && llmConfigured()) {
+    for (let i = 0; i < postIds.length; i += 50) {
+      await helpers.addJob('triage', { ids: postIds.slice(i, i + 50) }, { queueName: 'triage' });
+    }
+  }
+};
+
+const triageTask: Task = async (payload, helpers) => {
+  const { ids } = payload as { ids: number[] };
+  const stats = await triage(ids, (l) => helpers.logger.warn(l));
+  helpers.logger.info(`triaged ${ids.length}: ${JSON.stringify(stats)}`);
 };
 
 const apidiff: Task = async (payload, helpers) => {
@@ -42,4 +56,4 @@ const apidiff: Task = async (payload, helpers) => {
   helpers.logger.info(`apidiff ${pkg}: new versions ${res.added.join(', ') || 'none'}`);
 };
 
-export const taskList: TaskList = { schedule_sources, poll_source, normalize: normalizeTask, apidiff };
+export const taskList: TaskList = { schedule_sources, poll_source, normalize: normalizeTask, triage: triageTask, apidiff };

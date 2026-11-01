@@ -74,7 +74,7 @@ export function weekTitle(from: Date): string {
     : `${from.getUTCMonth() + 1} 月 ${from.getUTCDate()} 日 – ${end.getUTCMonth() + 1} 月 ${end.getUTCDate()} 日`;
 }
 
-export const mediaUrl = (path: string | null) => (path ? `/${path}` : null);
+export const mediaUrl = (path: string | null) => (!path ? null : /^https?:\/\//.test(path) ? path : `/${path}`);
 
 /** FNV-1a: stable pseudo-random placement on the domain map. */
 export function hash01(s: string, salt = 0): number {
@@ -104,3 +104,6 @@ export const SOURCE_KIND_ZH: Record<string, string> = {
   github_repo: 'GitHub', npm: 'npm', discourse: 'Discourse', hn: 'Hacker News', reddit: 'Reddit', rss: 'RSS',
   arxiv: 'arXiv', hf_papers: 'HF Papers', hf_models: 'HF 模型', bluesky: 'Bluesky', gharchive: 'GH Archive', page_diff: '页面', x: 'X',
 };
+
+/** How a fact was obtained. Post-extracted values are the author's word (E0) and say so (PLAN §3.3). */
+export const METHOD_ZH: Record<string, string> = { api: 'API', deterministic: '自动检查', human: '人工', llm_extract: '原帖自述 · 未验证' };
