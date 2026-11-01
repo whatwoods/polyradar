@@ -67,11 +67,11 @@ try {
   const authors = new Map<string, string>();
   for (const e of file.entities) {
     const { rows } = await c.query<{ id: number }>(
-      `insert into entity (slug, type, name, aliases, summary_en, summary_zh, status, evidence_level, importance, last_activity_at)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, now())
+      `insert into entity (slug, type, name, aliases, summary_en, summary_zh, status, evidence_level, importance, last_activity_at, curated)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, now(), true)
        on conflict (slug) do update set type = excluded.type, name = excluded.name, aliases = excluded.aliases,
          summary_en = excluded.summary_en, summary_zh = excluded.summary_zh, status = excluded.status,
-         evidence_level = excluded.evidence_level, importance = excluded.importance
+         evidence_level = excluded.evidence_level, importance = excluded.importance, curated = true
        returning id`,
       [e.slug, e.type, e.name, e.aliases ?? [], e.summary_en, e.summary_zh, e.status, e.evidence_level, e.importance],
     );

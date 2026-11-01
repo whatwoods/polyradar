@@ -26,17 +26,24 @@ const NOT_A_SUBJECT = /(^|\.)(discourse\.threejs\.org|reddit\.com|redd\.it|news\
 
 export interface Context {
   capabilities: { id: number; slug: string; en: string; zh: string }[];
+  /** Every tool-like entity, for matching names in promote. */
   known: { id: number; name: string; aliases: string[] }[];
+  /** Curated names for the prompt: stable, so the LLM cache survives new auto entities. */
+  vocabulary: string[];
 }
 
 export async function loadContext(): Promise<Context> {
   const pool = db();
   const [caps, known] = await Promise.all([
     pool.query<{ id: number; slug: string; en: string; zh: string }>('select id, slug, name_en as en, name_zh as zh from capability order by slug'),
-    pool.query<{ id: number; name: string; aliases: string[] }>(
-      `select id, name, aliases from entity where type in ('library','engine','tool','service','model') and status <> 'archived' order by importance desc`),
+    pool.query<{ id: number; name: string; aliases: string[]; curated: boolean }>(
+      `select id, name, aliases, curated from entity where type in ('library','engine','tool','service','model') and status <> 'archived' order by importance desc`),
   ]);
-  return { capabilities: caps.rows, known: known.rows };
+  return {
+    capabilities: caps.rows,
+    known: known.rows,
+    vocabulary: known.rows.filter((k) => k.curated).map((k) => k.name).sort(),
+  };
 }
 
 function schema(ctx: Context) {
@@ -71,7 +78,7 @@ subject_url: the URL of the presented thing itself, copied exactly from the item
 name: the project's name as written, or null.
 capabilities: 1–3 of the most specific nodes that are central to the item. Never a parent when a child fits. Nodes:
 ${ctx.capabilities.map((c) => `- ${c.slug}: ${c.en}`).join('\n')}
-built_with: libraries, engines and tools the item says it uses. Prefer these spellings when they match: ${ctx.known.map((k) => k.name).join(', ')}.
+built_with: libraries, engines and tools the item says it uses. Prefer these spellings when they match: ${ctx.vocabulary.join(', ')}.
 title_zh: natural Chinese title, at most 30 characters, keep product names as written. summary_zh: one factual Chinese sentence, at most 80 characters, no praise. summary_en: the same in English.
 
 decision (0–1 each), "would a developer or agent change their code or tool choice after reading this?". Be strict; most showcase posts land between 0.1 and 0.35 overall, and above 0.6 is reserved for items that change how many developers build things.
